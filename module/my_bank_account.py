@@ -69,6 +69,10 @@ class Account:
                 for item in self.history:
                     if item[0] == transaction:
                         print(item[0], ':', *item[1])
+            else:
+                print('История пополнения счета:')
+                print(f'   ---> Всего операций пополнения: {self.plus}')
+                print('Вы еще не сделали ни одного пополнения!')
         elif transaction == '-':
             if self.minus != 0:
                 print('История покупок:')
@@ -76,6 +80,10 @@ class Account:
                 for item in self.history:
                     if item[0] == transaction:
                         print(item[0], ':', *item[1])
+            else:
+                print('История покупок:')
+                print(f'   ---> Всего операций списания: {self.minus}')
+                print('Вы пока не сделали ни одной покупки!')
         else:
             print('Вся история действий со счетом:')
             print(f'   ---> Всего операций по счету: {self.plus+self.minus}')
@@ -94,8 +102,10 @@ def my_bank_account():
     while True:
         print('1. пополнение счета')
         print('2. покупка')
-        print('3. история покупок')
-        print('4. выход')
+        print('3. история пополнений')
+        print('4. история покупок')
+        print('5. посмотреть баланс счета')
+        print('6. выход')
 
         choice = input('Выберите пункт меню: ')
         if choice == '1':
@@ -115,9 +125,14 @@ def my_bank_account():
                 print(f'Вы произвели покупку "{purchase_name}". Текущий баланс счета: {my_account.get_balance()}')
                 print(separator('-', sep_count))
         elif choice == '3':
-            my_account.get_history('-')
+            my_account.get_history('+')
             print(separator('-', sep_count))
         elif choice == '4':
+            my_account.get_history('-')
+            print(separator('-', sep_count))
+        elif choice == '5':
+            print(f'Текущий баланс счета: {my_account.get_balance()}')
+        elif choice == '6':
             print('Выполение программы закончено. До свидания!')
             print(separator('-', sep_count))
             break

@@ -4,6 +4,10 @@ import sys
 import shutil
 import platform
 
+__author__ = 'Александр Николаев'
+__version__ = '1.0.1'
+__status__ = 'Development'
+
 
 def separator(symbol, count=55):
     return symbol * count
@@ -138,3 +142,11 @@ def cd_(current_path, new_folder):
         print(f'ERROR - {OSError.strerror}')
         os.chdir(current_path)
         print(f'Текущая рабочая папка не изменилась: {pwd_}')
+
+
+def get_author_info():
+    return __author__, __version__, __status__
+
+
+def is_correct_choice(choice, menu_items):
+    return choice.isdigit() and 0 <= int(choice) <= len(menu_items)

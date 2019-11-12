@@ -1,14 +1,8 @@
 # create Branch HW5
-import module.my_bank_account as mbc
+import module.my_bank_account as mba
 import module.quiz_game as qg
 from cfmlib import *
 from datetime import datetime
-
-__version__ = '1.0.0'
-
-__author__ = 'Alexander Nikolaev'
-__status__ = 'Development'
-
 
 sep_count = 55
 
@@ -54,16 +48,17 @@ while True:
             print(f'{k} - {v}')
         print(separator('-', sep_count))
     elif do == '8':
+        author, version, status = get_author_info()
         print(f'Дата: {datetime.now()}')
-        print(f'Автор программы: {__author__}')
-        print(f'Версия программы: {__version__}')
-        print(f'Статус программы: {__status__}')
+        print(f'Автор программы: {author}')
+        print(f'Версия программы: {version}')
+        print(f'Статус программы: {status}')
         print(separator('-', sep_count))
     elif do == '9':
         qg.quiz_game()
         print(separator('-', sep_count))
     elif do == '10':
-        mbc.my_bank_account()
+        mba.my_bank_account()
         print(separator('-', sep_count))
     elif do == '11':
         folder_name = input('Введите имя папки, в которую надо перейти: ')
