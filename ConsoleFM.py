@@ -33,34 +33,44 @@ while True:
             print(item)
         print(separator('-', sep_count))
     elif do == '5':
+        filename = 'listdir.txt'
+        files = ls_a(current_path)
+        folders = ls_d(current_path)
+        tmp = save_ls2file(filename, files, folders)
+        if tmp:
+            print(f'Файл {filename} - перезаписан')
+        else:
+            print(f'Файл {filename} - создан')
+        print(separator('-', sep_count))
+    elif do == '6':
         folders = ls_d(current_path)
         for item in folders:
             print(item)
         print(separator('-', sep_count))
-    elif do == '6':
+    elif do == '7':
         files = ls_a(current_path)
         for item in files:
             print(item)
         print(separator('-', sep_count))
-    elif do == '7':
+    elif do == '8':
         info = get_system_info()
         for k, v in info.items():
             print(f'{k} - {v}')
         print(separator('-', sep_count))
-    elif do == '8':
+    elif do == '9':
         author, version, status = get_author_info()
         print(f'Дата: {datetime.now()}')
         print(f'Автор программы: {author}')
         print(f'Версия программы: {version}')
         print(f'Статус программы: {status}')
         print(separator('-', sep_count))
-    elif do == '9':
+    elif do == '10':
         qg.quiz_game()
         print(separator('-', sep_count))
-    elif do == '10':
+    elif do == '11':
         mba.my_bank_account()
         print(separator('-', sep_count))
-    elif do == '11':
+    elif do == '12':
         folder_name = input('Введите имя папки, в которую надо перейти: ')
         cd_(current_path, folder_name)
         print(separator('-', sep_count))

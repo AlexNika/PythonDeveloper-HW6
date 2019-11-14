@@ -19,14 +19,15 @@ def show_main_menu(sep='-', sep_count=55):
     print('1. Создать папку')
     print('2. Удалить (файл/папку)')
     print('3. Копировать (файл/папку)')
-    print('4. Просмотр содержимого рабочей директории')
-    print('5. Посмотреть только папки')
-    print('6. Посмотреть только файлы')
-    print('7. Просмотр информации об операционной системе')
-    print('8. Создатель программы')
-    print('9. Играть в викторину')
-    print('10. Мой банковский счет')
-    print('11. Смена рабочей директории')
+    print('4. Посмотреть содержимого рабочей директории')
+    print('5. Сохранить содержимое рабочей директории в файл')
+    print('6. Посмотреть только папки')
+    print('7. Посмотреть только файлы')
+    print('8. Просмотр информации об операционной системе')
+    print('9. Создатель программы')
+    print('10. Играть в викторину')
+    print('11. Мой банковский счет')
+    print('12. Смена рабочей директории')
     print('0. Выход')
 
 
@@ -150,3 +151,16 @@ def get_author_info():
 
 def is_correct_choice(choice, menu_items):
     return choice.isdigit() and 0 <= int(choice) <= len(menu_items)
+
+
+def save_ls2file(filename, files, folders):
+    files = 'files: ' + ', '.join(files) + '\n'
+    folders = 'dirs: ' + ', '.join(folders)
+    flag = 0
+    if os.path.exists(filename):
+        flag = 1
+    with open(filename, 'w') as f:
+        f.write(files)
+        f.write(folders)
+    f.close()
+    return flag

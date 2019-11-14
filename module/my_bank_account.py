@@ -34,30 +34,34 @@
 
 Для реализации основного меню можно использовать пример ниже или написать свой
 """
+import os
+import pickle
+from datetime import datetime
 
 
 class Account:
-    plus = 0
-    minus = 0
-
-    def __init__(self, balance, history):
+    def __init__(self, balance, history, plus, minus):
         self.balance = balance
         self.history = history
+        self.plus = plus
+        self.minus = minus
 
-    def deposit(self, amount):
+    def deposit(self, amount, filename):
+        cdt = datetime.today().strftime('%d/%m/%Y %H.%M.%S')
         self.plus += 1
         transaction = '+'
         self.balance += amount
-        self.history.append([transaction, [amount]])
+        self.history.append([cdt, transaction, [amount]])
 
     def get_balance(self):
         return self.balance
 
     def buy(self, amount, name):
+        cdt = datetime.today().strftime('%d/%m/%Y %H.%M.%S')
         self.minus += 1
         transaction = '-'
         self.balance = self.balance - amount
-        self.history.append([transaction, [name, amount]])
+        self.history.append([cdt, transaction, [name, amount]])
 
     def get_history(self, transaction='all'):
         if len(self.history) == 0:
@@ -67,8 +71,8 @@ class Account:
                 print('История пополнения счета:')
                 print(f'   ---> Всего операций пополнения: {self.plus}')
                 for item in self.history:
-                    if item[0] == transaction:
-                        print(item[0], ':', *item[1])
+                    if item[1] == transaction:
+                        print(item[0], '--->', item[1], *item[2])
             else:
                 print('История пополнения счета:')
                 print(f'   ---> Всего операций пополнения: {self.plus}')
@@ -78,17 +82,55 @@ class Account:
                 print('История покупок:')
                 print(f'   ---> Всего операций списания: {self.minus}')
                 for item in self.history:
-                    if item[0] == transaction:
-                        print(item[0], ':', *item[1])
+                    if item[1] == transaction:
+                        print(item[0], '--->', item[1], *item[2])
             else:
                 print('История покупок:')
                 print(f'   ---> Всего операций списания: {self.minus}')
                 print('Вы пока не сделали ни одной покупки!')
         else:
             print('Вся история действий со счетом:')
-            print(f'   ---> Всего операций по счету: {self.plus+self.minus}')
+            print(f'   ---> Всего операций по счету: {self.plus + self.minus}')
             for item in self.history:
-                print(item[0], ':', *item[1])
+                print(item[0], '--->', item[1], ':', *item[2])
+
+    def clear_balance(self):
+        self.balance = 0
+
+    def clear_history(self):
+        self.history = []
+        self.plus = 0
+        self.minus = 0
+
+
+def read_data(filename1, filename2):
+    balance = 0
+    history = []
+    plus = 0
+    minus = 0
+    if os.path.exists(filename1):
+        with open(filename1, 'rb') as f:
+            balance = pickle.load(f)
+        f.close()
+    if os.path.exists(filename2):
+        with open(filename2, 'rb') as f:
+            history = pickle.load(f)
+            f.close()
+            for item in history:
+                if item[1] == '+':
+                    plus += 1
+                elif item[1] == '-':
+                    minus += 1
+    return balance, history, plus, minus
+
+
+def write_data(balance, history, filename1, filename2):
+    with open(filename1, 'wb') as f:
+        pickle.dump(balance, f)
+        f.close()
+    with open(filename2, 'wb') as f:
+        pickle.dump(history, f)
+        f.close()
 
 
 def separator(symbol, count):
@@ -96,43 +138,66 @@ def separator(symbol, count):
 
 
 def my_bank_account():
-    my_account = Account(0, [])
+    account_balance_filename = 'account_balance.pkl'
+    account_history_filename = 'account_history.pkl'
+    total_amount, history, plus, minus = read_data(account_balance_filename, account_history_filename)
+    my_account = Account(total_amount, history, plus, minus)
     sep_count = 55
 
     while True:
-        print('1. пополнение счета')
-        print('2. покупка')
-        print('3. история пополнений')
-        print('4. история покупок')
-        print('5. посмотреть баланс счета')
-        print('6. выход')
-
+        print('1. Пополнение счета')
+        print('2. Покупка')
+        print('3. Посмотреть полную историю по счету')
+        print('4. Посмотреть историю пополнений')
+        print('5. Посмотреть историю покупок')
+        print('6. Показать баланс счета')
+        print('7. Очистить историю и обнулить баланс')
+        print('0. Выход')
         choice = input('Выберите пункт меню: ')
         if choice == '1':
-            deposit_amount = int(input('Введите сумму пополнения счета: '))
-            my_account.deposit(deposit_amount)
-            print(f'Вы пополнили счет. Текущий баланс счета: {my_account.get_balance()}')
+            deposit_amount = float(input('Введите сумму пополнения счета: '))
+            my_account.deposit(deposit_amount, account_balance_filename)
+            total_amount = my_account.get_balance()
+            print(f'Вы пополнили счет. Текущий баланс счета: {total_amount}')
             print(separator('-', sep_count))
         elif choice == '2':
-            purchase_amount = int(input('Введите сумму покупки: '))
-            if purchase_amount > my_account.get_balance():
+            purchase_amount = float(input('Введите сумму покупки: '))
+            total_amount = my_account.get_balance()
+            if purchase_amount > total_amount:
                 print('У вас не достаточно средств на счете. Покупка не возможна!')
-                print(f'Текущий баланс счета: {my_account.get_balance()}')
+                print(f'Текущий баланс счета: {total_amount}')
                 print(separator('-', sep_count))
             else:
                 purchase_name = input('Введите название покупки: ')
                 my_account.buy(purchase_amount, purchase_name)
-                print(f'Вы произвели покупку "{purchase_name}". Текущий баланс счета: {my_account.get_balance()}')
+                total_amount = my_account.get_balance()
+                print(f'Вы произвели покупку "{purchase_name}" на сумму {purchase_amount}')
+                print(f'Текущий баланс счета: {total_amount}')
                 print(separator('-', sep_count))
         elif choice == '3':
-            my_account.get_history('+')
+            my_account.get_history()
             print(separator('-', sep_count))
         elif choice == '4':
-            my_account.get_history('-')
+            my_account.get_history('+')
             print(separator('-', sep_count))
         elif choice == '5':
-            print(f'Текущий баланс счета: {my_account.get_balance()}')
+            my_account.get_history('-')
+            print(separator('-', sep_count))
         elif choice == '6':
+            total_amount = my_account.get_balance()
+            print(f'Текущий баланс счета: {total_amount}')
+            print(separator('-', sep_count))
+        elif choice == '7':
+            my_account.clear_balance()
+            my_account.clear_history()
+            total_amount = my_account.get_balance()
+            history = []
+            write_data(total_amount, history, account_balance_filename, account_history_filename)
+            print(f'БАЛАНС ОБНУЛЕН! Текущий баланс счета: {total_amount}')
+            print('ИСТОРИЯ ОЧИЩЕНА!')
+            print(separator('-', sep_count))
+        elif choice == '0':
+            write_data(total_amount, history, account_balance_filename, account_history_filename)
             print('Выполение программы закончено. До свидания!')
             print(separator('-', sep_count))
             break
