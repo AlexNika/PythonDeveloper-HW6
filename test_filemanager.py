@@ -54,13 +54,14 @@ def test_is_correct_choice():
                   '2. Удалить (файл/папку)',
                   '3. Копировать (файл/папку)',
                   '4. Просмотр содержимого рабочей директории',
-                  '5. Посмотреть только папки',
-                  '6. Посмотреть только файлы',
-                  '7. Просмотр информации об операционной системе',
-                  '8. Создатель программы',
-                  '9. Играть в викторину',
-                  '10. Мой банковский счет',
-                  '11. Смена рабочей директории',
+                  '5. Сохранить содержимое рабочей директории в файл',
+                  '6. Посмотреть только папки',
+                  '7. Посмотреть только файлы',
+                  '8. Просмотр информации об операционной системе',
+                  '9. Создатель программы',
+                  '10. Играть в викторину',
+                  '11. Мой банковский счет',
+                  '12. Смена рабочей директории',
                   '0. Выход')
     assert is_correct_choice('0', menu_items) == True
 
@@ -86,8 +87,9 @@ def test_ls_a():
     :return: test assertions for "ls_a" (show only files) function from console file manager
     Dirty function test!!!
     """
-    assert ls_a(pwd_()) == ['.gitignore', 'cfmlib.py', 'ConsoleFM.py', 'LICENSE', 'README.md', 'test_filemanager.py',
-                            'test_python.py']
+    assert ls_a(pwd_()) == ['.gitignore', 'account_balance.pkl', 'account_history.pkl', 'cfmlib.py',
+                            'ConsoleFM.py', 'LICENSE', 'listdir.txt', 'README.md', 'test_filemanager.py',
+                            'test_new_functions.py', 'test_python.py']
 
 
 def test_md_(monkeypatch):
