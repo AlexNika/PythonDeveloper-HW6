@@ -37,10 +37,7 @@ while True:
         files = ls_a(current_path)
         folders = ls_d(current_path)
         tmp = save_ls2file(filename, files, folders)
-        if tmp:
-            print(f'Файл {filename} - перезаписан')
-        else:
-            print(f'Файл {filename} - создан')
+        print(f'Файл {filename} - перезаписан' if tmp else f'Файл {filename} - создан')
         print(separator('-', sep_count))
     elif do == '6':
         folders = ls_d(current_path)

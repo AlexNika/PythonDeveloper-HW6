@@ -68,17 +68,15 @@ def rm_(current_path, *args):
             else:
                 print(f'ERROR - Невозможно удалить. Файл/папка не существует: {name_}')
         except PermissionError:
-            if os.path.isdir(name_):
-                print(f'ERROR - Не хватает прав доступа на удаление папки: {name_}')
-            elif os.path.isfile(name_):
-                print(f'ERROR - Не хватает прав доступа на удаление файла: {name_}')
+            print(f'ERROR - Не хватает прав доступа на удаление папки: {name_}' if os.path.isdir(name_) else
+                  f'ERROR - Не хватает прав доступа на удаление файла: {name_}')
         except OSError:
             if os.path.isdir(name_):
                 print(f'ERROR - Невозможно удалить. Папка не пустая: {name_}')
                 confirm = input(f'Удалить папку {name_} в любом случае (Да/Нет)?:').lower()
                 if confirm == 'да':
                     shutil.rmtree(name_)
-            elif os.path.isfile(name_):
+            else:
                 print(f'ERROR - {OSError.filename} : {OSError.strerror}')
 
 
@@ -105,20 +103,12 @@ def cp_(current_path, source, destination):
 
 def ls_d(path):
     # - Посмотреть только папки
-    folders = []
-    for item in os.listdir(path):
-        if os.path.isdir(item):
-            folders.append(item)
-    return folders
+    return [item for item in os.listdir(path) if os.path.isdir(item)]
 
 
 def ls_a(path):
     # - Посмотреть только файлов
-    files = []
-    for item in os.listdir(path):
-        if os.path.isfile(item):
-            files.append(item)
-    return files
+    return [item for item in os.listdir(path) if os.path.isfile(item)]
 
 
 def get_system_info():
@@ -154,13 +144,13 @@ def is_correct_choice(choice, menu_items):
 
 
 def save_ls2file(filename, files, folders):
-    files = 'files: ' + ', '.join(files) + '\n'
-    folders = 'dirs: ' + ', '.join(folders)
-    flag = 0
+    files = f'files: {", ".join(files)}\n'
+    folders = f'dirs: {", ".join(folders)}'
+    is_exist = False
     if os.path.exists(filename):
-        flag = 1
+        is_exist = True
     with open(filename, 'w') as f:
         f.write(files)
         f.write(folders)
     f.close()
-    return flag
+    return is_exist
