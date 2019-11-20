@@ -1,2 +1,2 @@
-files: .gitignore, account_balance.pkl, account_history.pkl, cfmlib.py, ConsoleFM.py, LICENSE, listdir.txt, README.md, test_filemanager.py, test_new_functions.py, test_python.py
+files: .gitignore, account_balance.pkl, account_history.pkl, cfmlib.py, ConsoleFM.py, LICENSE, listdir.txt, README.md, test_filemanager.py, test_new_functions.py, test_python.py 
 dirs: .git, .idea, .pytest_cache, module, venv, __pycache__

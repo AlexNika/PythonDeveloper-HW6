@@ -36,23 +36,37 @@
 """
 import os
 import pickle
+import requests
+from lxml import html
 from datetime import datetime
 
 
+def exchange_rate(func):
+    def wrapper(self, usd_rate, euro_rate):
+        total_amount = self.balance
+        print(f'Текущий баланс счета в $США: {(total_amount/usd_rate):.2f}')
+        print(f'Текущий баланс счета в EURO: {(total_amount/euro_rate):.2f}')
+        return func(self)
+    return wrapper
+
+
 class Account:
-    def __init__(self, balance, history, plus, minus):
+    def __init__(self, balance, history, plus, minus, usd, euro):
         self.balance = balance
         self.history = history
         self.plus = plus
         self.minus = minus
+        self.usd = usd
+        self.euro = euro
 
-    def deposit(self, amount, filename):
+    def deposit(self, amount):
         cdt = datetime.today().strftime('%d/%m/%Y %H.%M.%S')
         self.plus += 1
         transaction = '+'
         self.balance += amount
         self.history.append([cdt, transaction, [amount]])
 
+    @exchange_rate
     def get_balance(self):
         return self.balance
 
@@ -64,15 +78,13 @@ class Account:
         self.history.append([cdt, transaction, [name, amount]])
 
     def get_history(self, transaction='all'):
-        if len(self.history) == 0:
-            print('Нет записей в истории счета!')
+        print('<<< История счета! >>>' if self.history else '<<< Нет записей в истории счета! >>>')
         if transaction == '+':
             if self.plus != 0:
-                print('История пополнения счета:')
+                print('Пополнения счета:')
                 print(f'   ---> Всего операций пополнения: {self.plus}')
-                for item in self.history:
-                    if item[1] == transaction:
-                        print(item[0], '--->', item[1], *item[2])
+                print(*(f'{i[0]} ---> {i[1]} {" ".join(str(x) for x in i[2])}'
+                        for i in self.history if i[1] == transaction), sep='\n')
             else:
                 print('История пополнения счета:')
                 print(f'   ---> Всего операций пополнения: {self.plus}')
@@ -81,9 +93,8 @@ class Account:
             if self.minus != 0:
                 print('История покупок:')
                 print(f'   ---> Всего операций списания: {self.minus}')
-                for item in self.history:
-                    if item[1] == transaction:
-                        print(item[0], '--->', item[1], *item[2])
+                print(*(f'{i[0]} ---> {i[1]} {" ".join(str(x) for x in i[2])}'
+                        for i in self.history if i[1] == transaction), sep='\n')
             else:
                 print('История покупок:')
                 print(f'   ---> Всего операций списания: {self.minus}')
@@ -91,8 +102,7 @@ class Account:
         else:
             print('Вся история действий со счетом:')
             print(f'   ---> Всего операций по счету: {self.plus + self.minus}')
-            for item in self.history:
-                print(item[0], '--->', item[1], ':', *item[2])
+            print(*(f'{i[0]} ---> {i[1]} {" ".join(str(x) for x in i[2])}' for i in self.history), sep='\n')
 
     def clear_balance(self):
         self.balance = 0
@@ -137,11 +147,29 @@ def separator(symbol, count):
     return symbol * count
 
 
+def get_exchange_rate(cdt):
+    header = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                            'Chrome/78.0.3904.97 Safari/537.36'}
+    main_link = 'http://www.cbr.ru/currency_base/daily/?date_req='
+    try:
+        r = requests.get(f'{main_link}{cdt}', headers=header)
+        root = html.fromstring(r.text)
+        u_rate = float(root.xpath('//tr[12]/td[5]/text()')[0].replace(',', '.'))
+        e_rate = float(root.xpath('//tr[13]/td[5]/text()')[0].replace(',', '.'))
+    except requests.exceptions.RequestException as e:
+        print(f'Ошибка получения курса валют - {e}')
+        u_rate = 1
+        e_rate = 1
+    return u_rate, e_rate
+
+
 def my_bank_account():
     account_balance_filename = 'account_balance.pkl'
     account_history_filename = 'account_history.pkl'
     total_amount, history, plus, minus = read_data(account_balance_filename, account_history_filename)
-    my_account = Account(total_amount, history, plus, minus)
+    cdt = datetime.today().strftime('%d.%m.%Y')
+    usd_rate, euro_rate = get_exchange_rate(cdt)
+    my_account = Account(total_amount, history, plus, minus, usd_rate, euro_rate)
     sep_count = 55
 
     while True:
@@ -155,24 +183,38 @@ def my_bank_account():
         print('0. Выход')
         choice = input('Выберите пункт меню: ')
         if choice == '1':
-            deposit_amount = float(input('Введите сумму пополнения счета: '))
-            my_account.deposit(deposit_amount, account_balance_filename)
-            total_amount = my_account.get_balance()
-            print(f'Вы пополнили счет. Текущий баланс счета: {total_amount}')
+            try:
+                deposit_amount = abs(float(input('Введите сумму пополнения счета: ')))
+            except ValueError:
+                print('Неверно введена сумма пополнения. Сумма должна быть в формате XXXX.XX (например: 1999.99)')
+                deposit_amount = 0
+            my_account.deposit(deposit_amount)
+            total_amount = my_account.get_balance(usd_rate, euro_rate)
+            print(f'Текущий баланс счета в РУБ.: {total_amount:.2f}')
+            print('Вы пополнили счет!')
             print(separator('-', sep_count))
         elif choice == '2':
-            purchase_amount = float(input('Введите сумму покупки: '))
-            total_amount = my_account.get_balance()
-            if purchase_amount > total_amount:
-                print('У вас не достаточно средств на счете. Покупка не возможна!')
-                print(f'Текущий баланс счета: {total_amount}')
-                print(separator('-', sep_count))
-            else:
-                purchase_name = input('Введите название покупки: ')
+            try:
+                purchase_amount = abs(float(input('Введите сумму покупки: ')))
+                if purchase_amount > total_amount:
+                    print(f'Текущий баланс счета в РУБ.: {total_amount:.2f}')
+                    print('У вас не достаточно средств на счете. Покупка не возможна!')
+                    print(separator('-', sep_count))
+                else:
+                    purchase_name = input('Введите название покупки: ')
+                    my_account.buy(purchase_amount, purchase_name)
+                    print(f'Вы произвели покупку "{purchase_name}" на сумму {purchase_amount}')
+                    total_amount = my_account.get_balance(usd_rate, euro_rate)
+                    print(f'Текущий баланс счета в РУБ.: {total_amount:.2f}')
+                    print(separator('-', sep_count))
+            except ValueError:
+                print('Неверно введена сумма покупки. Сумма должна быть в формате XXXX.XX (например: 1999.99)')
+                purchase_amount = 0
+                purchase_name = 'Неудачная покупка'
                 my_account.buy(purchase_amount, purchase_name)
-                total_amount = my_account.get_balance()
                 print(f'Вы произвели покупку "{purchase_name}" на сумму {purchase_amount}')
-                print(f'Текущий баланс счета: {total_amount}')
+                total_amount = my_account.get_balance(usd_rate, euro_rate)
+                print(f'Текущий баланс счета в РУБ.: {total_amount:.2f}')
                 print(separator('-', sep_count))
         elif choice == '3':
             my_account.get_history()
@@ -184,16 +226,17 @@ def my_bank_account():
             my_account.get_history('-')
             print(separator('-', sep_count))
         elif choice == '6':
-            total_amount = my_account.get_balance()
-            print(f'Текущий баланс счета: {total_amount}')
+            total_amount = my_account.get_balance(usd_rate, euro_rate)
+            print(f'Текущий баланс счета в РУБ.: {total_amount:.2f}')
             print(separator('-', sep_count))
         elif choice == '7':
             my_account.clear_balance()
             my_account.clear_history()
-            total_amount = my_account.get_balance()
+            total_amount = my_account.get_balance(usd_rate, euro_rate)
             history = []
             write_data(total_amount, history, account_balance_filename, account_history_filename)
-            print(f'БАЛАНС ОБНУЛЕН! Текущий баланс счета: {total_amount}')
+            print(f'Текущий баланс счета: {total_amount:.2f}')
+            print('БАЛАНС ОБНУЛЕН!')
             print('ИСТОРИЯ ОЧИЩЕНА!')
             print(separator('-', sep_count))
         elif choice == '0':
